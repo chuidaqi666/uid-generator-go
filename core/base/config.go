@@ -1,9 +1,9 @@
 package base
 
 import (
-	util "baidu-uid-go/core/util"
 	"os"
 	"strconv"
+	util "uid-generator-go/core/util"
 )
 
 const (

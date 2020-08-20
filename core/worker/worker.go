@@ -1,12 +1,12 @@
 package worker
 
 import (
-	"baidu-uid-go/core/util"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"math/rand"
 	"time"
+	"uid-generator-go/core/util"
 )
 
 type WorkerDBConfig struct {

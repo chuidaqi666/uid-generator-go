@@ -1,9 +1,9 @@
 package generator
 
 import (
-	"baidu-uid-go/core/worker"
 	"sync"
 	"testing"
+	"uid-generator-go/core/worker"
 )
 
 func Test11(t *testing.T) {

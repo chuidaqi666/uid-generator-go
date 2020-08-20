@@ -1,12 +1,12 @@
 package base
 
 import (
-	"baidu-uid-go/core/util"
 	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
+	"uid-generator-go/core/util"
 )
 
 var (
@@ -68,7 +68,7 @@ func (r *RingBuffer) Put(uid uint64) bool {
 	distance := currentTail - currentCursor
 	if distance == r.indexMask {
 		//到达最大buffersize，拒绝再放入uid
-		fmt.Println(fmt.Sprintf("Rejected putting buffer for uid:%v",uid))
+		fmt.Println(fmt.Sprintf("Rejected putting buffer for uid:%v", uid))
 		return false
 	}
 	nextTailIndex := r.calSlotIndex(currentTail + 1)

@@ -1,4 +1,4 @@
-module baidu-uid-go
+module uid-generator-go
 
 go 1.14
 

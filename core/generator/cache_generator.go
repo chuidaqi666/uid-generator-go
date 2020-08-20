@@ -1,11 +1,11 @@
 package generator
 
 import (
-	"baidu-uid-go/core/base"
-	"baidu-uid-go/core/util"
-	"baidu-uid-go/core/worker"
 	"fmt"
 	"sync"
+	"uid-generator-go/core/base"
+	"uid-generator-go/core/util"
+	"uid-generator-go/core/worker"
 )
 
 type CacheGenerator struct {
