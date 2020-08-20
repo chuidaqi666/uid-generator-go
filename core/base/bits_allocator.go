@@ -2,8 +2,6 @@ package base
 
 import "sync"
 
-
-
 type BitsAllocator struct {
 	TotalBits      int
 	timestampShift int
@@ -22,7 +20,10 @@ type BitsAllocator struct {
 func (b *BitsAllocator) Init(timestampBits int, workerIdBits int, sequenceBits int) {
 	b.initOnce.Do(func() {
 		if timestampBits+workerIdBits+sequenceBits < 64 {
-			panic("不足64位")
+			panic("Less than 64 bits")
+		}
+		if timestampBits+workerIdBits+sequenceBits > 64 {
+			panic("more than 64 bits")
 		}
 		//initialize bits
 		b.TimestampBits = timestampBits

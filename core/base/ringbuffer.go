@@ -68,7 +68,7 @@ func (r *RingBuffer) Put(uid uint64) bool {
 	distance := currentTail - currentCursor
 	if distance == r.indexMask {
 		//到达最大buffersize，拒绝再放入uid
-		fmt.Println(fmt.Sprintf("Rejected putting buffer for uid:%v", uid))
+		fmt.Printf("Rejected putting buffer for uid:%v\n", uid)
 		return false
 	}
 	nextTailIndex := r.calSlotIndex(currentTail + 1)
