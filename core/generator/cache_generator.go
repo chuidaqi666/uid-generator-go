@@ -31,7 +31,6 @@ func (c *CacheGenerator) InitDefaultWithWorkDB(w *worker.WorkerDBConfig) {
 		//初始化BitsAllocator
 		c.bita.Init(c.config.TimestampBits, c.config.WorkerIdBits, c.config.SequenceBits)
 		c.workId = uint64(workId)
-		//panic(fmt.Sprintf("Worker id %v exceeds the max %v", c.workId, c.bita.MaxWorkerId))
 		if c.workId > c.bita.MaxWorkerId {
 			panic(fmt.Sprintf("Worker id %v exceeds the max %v", c.workId, c.bita.MaxWorkerId))
 		}
@@ -79,10 +78,10 @@ func (c *CacheGenerator) ParseUID(uid uint64) string {
 
 func (c *CacheGenerator) nextIdsForOneSecond(currentSecond uint64) (uidList []uint64) {
 	// Initialize result list size of (max sequence + 1)
-	listSize := uint64(c.bita.MaxSequence + 1)
-	var offset uint64
+	listSize := c.bita.MaxSequence + 1
 	// Allocate the first sequence of the second, the others can be calculated with the offset
 	firstSeqUid := c.bita.Allocate(currentSecond-c.epochSeconds, c.workId, 0)
+	var offset uint64
 	for offset = 0; offset < listSize; offset++ {
 		uidList = append(uidList, firstSeqUid+offset)
 	}
