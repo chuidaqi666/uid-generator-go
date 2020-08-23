@@ -133,9 +133,9 @@ func (r *RingBuffer) AsyncPadding() {
 		return
 	}
 
-	isFullRingBuffer := true
+	isFullRingBuffer := false
 	// fill the rest slots until to catch the cursor
-	for isFullRingBuffer {
+	for !isFullRingBuffer {
 		uidList := r.UidProvider(atomic.AddUint64(&r.lastSecond, 1))
 		for _, uid := range uidList {
 			isFullRingBuffer = !r.Put(uid)
