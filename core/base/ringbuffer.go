@@ -68,13 +68,13 @@ func (r *RingBuffer) Put(uid uint64) bool {
 	distance := currentTail - currentCursor
 	if distance == r.indexMask {
 		//到达最大buffersize，拒绝再放入uid
-		fmt.Printf("Rejected putting buffer for uid:%v\n", uid)
+		fmt.Printf("Rejected putting buffer for uid:%v,tail:%v,cursor:%v\n", uid, currentTail, currentCursor)
 		return false
 	}
 	nextTailIndex := r.calSlotIndex(currentTail + 1)
 	if atomic.LoadUint32(&r.flags[nextTailIndex]) != CAN_PUT_FLAG {
 		//标志不是可put，拒绝
-		fmt.Printf("Curosr not in can put status,rejected uid:%v\n", uid)
+		fmt.Printf("Curosr not in can put status,rejected uid:%v,tail:%v,cursor:%v\n", uid, currentTail, currentCursor)
 		return false
 	}
 	//nextTailIndexflag := r.flags[nextTailIndex].Load().(uint8)
