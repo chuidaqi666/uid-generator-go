@@ -74,7 +74,7 @@ func (r *RingBuffer) Put(uid uint64) bool {
 	nextTailIndex := r.calSlotIndex(currentTail + 1)
 	if atomic.LoadUint32(&r.flags[nextTailIndex]) != CAN_PUT_FLAG {
 		//标志不是可put，拒绝
-		fmt.Println("Curosr not in can put status")
+		fmt.Printf("Curosr not in can put status,rejected uid:%v\n", uid)
 		return false
 	}
 	//nextTailIndexflag := r.flags[nextTailIndex].Load().(uint8)
