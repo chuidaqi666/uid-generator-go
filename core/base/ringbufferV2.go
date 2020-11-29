@@ -9,34 +9,61 @@ import (
 	"uid-generator-go/core/util"
 )
 
-type RingBuffer struct {
-	tail   int64
+type PaddedTailStruct struct {
+	tail int64
+	_    CacheLinePad
+}
+
+type PaddedCursorStruct struct {
 	cursor int64
+	_      CacheLinePad
+}
 
-	slots []uint64
-	flags []uint32
-
-	//padding
+type PaddedRunStruct struct {
 	running uint64
+	_       CacheLinePad
+}
 
-	bufferSize uint64
-	indexMask  int64
+type PaddedSlotStruct struct {
+	slot uint64
+	_    CacheLinePad
+}
 
+type PaddedflagStruct struct {
+	flag uint64
+	_    CacheLinePad
+}
+
+type CacheLinePad struct {
+	_ [CacheLinePadSize]byte
+}
+
+const CacheLinePadSize = 64
+
+type RingBufferV2 struct {
+	bufferSize       uint64
+	indexMask        int64
 	paddingThreshold int64
 	mu               sync.Mutex
+	UidProvider      func(uint64) []uint64
+	lastSecond       uint64
 
-	UidProvider func(uint64) []uint64
+	//padding
+	running PaddedRunStruct
+	tail    PaddedTailStruct
+	cursor  PaddedCursorStruct
 
-	lastSecond uint64
+	slots []PaddedSlotStruct
+	flags []PaddedflagStruct
 }
 
 //初始化ringbuffer
-func InitRingBuffer(bufferSize uint64, paddingFactor uint64) *RingBuffer {
-	r := &RingBuffer{
+func InitRingBufferV2(bufferSize uint64, paddingFactor uint64) *RingBufferV2 {
+	r := &RingBufferV2{
 		bufferSize: bufferSize,
 		indexMask:  (int64)(bufferSize - 1),
-		slots:      make([]uint64, bufferSize),
-		flags:      make([]uint32, bufferSize),
+		slots:      make([]PaddedSlotStruct, bufferSize),
+		flags:      make([]PaddedflagStruct, bufferSize),
 		//slots:            make([]atomic.Value, bufferSize),
 		//flags:            make([]atomic.Value, bufferSize),
 		paddingThreshold: (int64)(bufferSize * paddingFactor / 100),
@@ -44,27 +71,31 @@ func InitRingBuffer(bufferSize uint64, paddingFactor uint64) *RingBuffer {
 	var i uint64
 	for i = 0; i < bufferSize; i++ {
 		//r.flags[i].Store(CAN_PUT_FLAG)
-		r.flags[i] = CAN_PUT_FLAG
+		r.flags[i].flag = CAN_PUT_FLAGV2
 	}
-	r.tail = START_POINT
-	r.cursor = START_POINT
+	r.tail = PaddedTailStruct{
+		tail: -1,
+	}
+	r.cursor = PaddedCursorStruct{
+		cursor: -1,
+	}
 	r.lastSecond = uint64(time.Now().Unix())
 	return r
 }
 
-func (r *RingBuffer) Put(uid uint64) bool {
+func (r *RingBufferV2) Put(uid uint64) bool {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	currentTail := atomic.LoadInt64(&r.tail)
-	currentCursor := atomic.LoadInt64(&r.cursor)
+	currentTail := atomic.LoadInt64(&r.tail.tail)
+	currentCursor := atomic.LoadInt64(&r.cursor.cursor)
 	distance := currentTail - currentCursor
 	if distance == r.indexMask {
 		//到达最大buffersize，拒绝再放入uid
 		fmt.Printf("Rejected putting buffer for uid:%v,tail:%v,cursor:%v\n", uid, currentTail, currentCursor)
 		return false
 	}
-	nextTailIndex := r.calSlotIndex(currentTail + 1)
-	if atomic.LoadUint32(&r.flags[nextTailIndex]) != CAN_PUT_FLAG {
+	nextTailIndex := r.calSlotIndexV2(currentTail + 1)
+	if atomic.LoadUint64(&r.flags[nextTailIndex].flag) != CAN_PUT_FLAGV2 {
 		//标志不是可put，拒绝
 		fmt.Printf("Curosr not in can put status,rejected uid:%v,tail:%v,cursor:%v\n", uid, currentTail, currentCursor)
 		return false
@@ -75,18 +106,18 @@ func (r *RingBuffer) Put(uid uint64) bool {
 	//	fmt.Println("标志不是可put，拒绝")
 	//	return false
 	//}
-	atomic.StoreUint64(&r.slots[nextTailIndex], uid)
-	atomic.StoreUint32(&r.flags[nextTailIndex], CAN_TAKE_FLAG)
+	atomic.StoreUint64(&r.slots[nextTailIndex].slot, uid)
+	atomic.StoreUint64(&r.flags[nextTailIndex].flag, CAN_TAKE_FLAGV2)
 	//r.slots[nextTailIndex].Store(uid)
 	//r.flags[nextTailIndex].Store(CAN_TAKE_FLAG)
-	atomic.AddInt64(&r.tail, 1)
+	atomic.AddInt64(&r.tail.tail, 1)
 	return true
 }
 
-func (r *RingBuffer) Take() (uint64, error) {
-	currentCursor := atomic.LoadInt64(&r.cursor)
-	nextCursor := util.Uint64UpdateAndGet(&r.cursor, func(o int64) int64 {
-		if o == atomic.LoadInt64(&r.tail) {
+func (r *RingBufferV2) Take() (uint64, error) {
+	currentCursor := atomic.LoadInt64(&r.cursor.cursor)
+	nextCursor := util.Uint64UpdateAndGet(&r.cursor.cursor, func(o int64) int64 {
+		if o == atomic.LoadInt64(&r.tail.tail) {
 			return o
 		} else {
 			return o + 1
@@ -95,7 +126,7 @@ func (r *RingBuffer) Take() (uint64, error) {
 	if nextCursor < currentCursor {
 		panic("Curosr can't move back")
 	}
-	currentTail := atomic.LoadInt64(&r.tail)
+	currentTail := atomic.LoadInt64(&r.tail.tail)
 	if currentTail-nextCursor < r.paddingThreshold {
 		//异步填充
 		go r.AsyncPadding()
@@ -104,24 +135,24 @@ func (r *RingBuffer) Take() (uint64, error) {
 		//拒绝
 		return 0, errors.New("Rejected take uid")
 	}
-	nextCursorIndex := r.calSlotIndex(nextCursor)
-	if atomic.LoadUint32(&r.flags[nextCursorIndex]) != CAN_TAKE_FLAG {
+	nextCursorIndex := r.calSlotIndexV2(nextCursor)
+	if atomic.LoadUint64(&r.flags[nextCursorIndex].flag) != CAN_TAKE_FLAGV2 {
 		return 0, errors.New("Curosr not in can take status")
 	}
 	//nextCursorIndexflag := r.flags[nextCursorIndex].Load().(uint8)
 	//if nextCursorIndexflag != CAN_TAKE_FLAG {
 	//	return 0, errors.New("Curosr not in can take status")
 	//}
-	uid := atomic.LoadUint64(&r.slots[nextCursorIndex])
-	atomic.StoreUint32(&r.flags[nextCursorIndex], CAN_PUT_FLAG)
+	uid := atomic.LoadUint64(&r.slots[nextCursorIndex].slot)
+	atomic.StoreUint64(&r.flags[nextCursorIndex].flag, CAN_PUT_FLAGV2)
 	//uid := r.slots[nextCursorIndex].Load().(uint64)
 	//r.flags[nextCursorIndex].Store(CAN_PUT_FLAG)
 	return uid, nil
 }
 
-func (r *RingBuffer) AsyncPadding() {
+func (r *RingBufferV2) AsyncPadding() {
 	// is still running
-	if !atomic.CompareAndSwapUint64(&r.running, NOT_RUNNING, RUNNING) {
+	if !atomic.CompareAndSwapUint64(&r.running.running, NOT_RUNNING, RUNNING) {
 		return
 	}
 
@@ -138,10 +169,10 @@ func (r *RingBuffer) AsyncPadding() {
 	}
 
 	// not running now
-	atomic.CompareAndSwapUint64(&r.running, RUNNING, NOT_RUNNING)
+	atomic.CompareAndSwapUint64(&r.running.running, RUNNING, NOT_RUNNING)
 }
 
-func (r *RingBuffer) calSlotIndex(sequence int64) int64 {
+func (r *RingBufferV2) calSlotIndexV2(sequence int64) int64 {
 	//return sequence % r.indexMask
 	return sequence & r.indexMask
 }
