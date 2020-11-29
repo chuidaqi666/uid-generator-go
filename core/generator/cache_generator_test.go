@@ -14,7 +14,7 @@ func Test11(t *testing.T) {
 		w := &worker.WorkerDBConfig{
 			UserName:  "root",
 			Password:  "123456",
-			IpAddrees: "120.26.174.110",
+			IpAddrees: "localhost",
 			Port:      "3306",
 			DbName:    "db1",
 			Charset:   "utf8",
