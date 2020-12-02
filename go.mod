@@ -1,4 +1,4 @@
-module uid-generator-go
+module github.com/chuidaqi666/uid-generator-go
 
 go 1.14
 
