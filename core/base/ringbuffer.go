@@ -3,10 +3,10 @@ package base
 import (
 	"errors"
 	"fmt"
+	"github.com/chuidaqi666/uid-generator-go/core/util"
 	"sync"
 	"sync/atomic"
 	"time"
-	"uid-generator-go/core/util"
 )
 
 type RingBuffer struct {

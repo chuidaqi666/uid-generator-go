@@ -1,9 +1,9 @@
 package base
 
 import (
+	util "github.com/chuidaqi666/uid-generator-go/core/util"
 	"os"
 	"strconv"
-	util "uid-generator-go/core/util"
 )
 
 const (

@@ -55,7 +55,7 @@ func Test11(t *testing.T) {
 		w := &worker.WorkerDBConfig{
 			UserName:  "root",
 			Password:  "123456",
-			IpAddrees: "localhost",
+			IpAddrees: "120.26.174.110",
 			Port:      "3306",
 			DbName:    "db1",
 			Charset:   "utf8",
@@ -78,7 +78,7 @@ func getUid(c base.UidGenerator, wg *sync.WaitGroup) {
 	//var once sync.Once
 	//uid, _ := c.GetUID()
 	//fmt.Println(1)
-	for i := 0; i < 200000; i++ {
+	for i := 0; i < 2000; i++ {
 		c.GetUID()
 		//once.Do(func() {
 		//	uid, err := c.GetUID()
