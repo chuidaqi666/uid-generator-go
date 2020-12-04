@@ -2,11 +2,11 @@ package worker
 
 import (
 	"fmt"
+	"github.com/chuidaqi666/uid-generator-go/core/util"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"math/rand"
 	"time"
-	"uid-generator-go/core/util"
 )
 
 type WorkerDBConfig struct {

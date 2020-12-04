@@ -2,10 +2,10 @@ package generator
 
 import (
 	"fmt"
+	"github.com/chuidaqi666/uid-generator-go/core/base"
+	"github.com/chuidaqi666/uid-generator-go/core/util"
+	"github.com/chuidaqi666/uid-generator-go/core/worker"
 	"sync"
-	"uid-generator-go/core/base"
-	"uid-generator-go/core/util"
-	"uid-generator-go/core/worker"
 )
 
 type CacheGeneratorV2 struct {

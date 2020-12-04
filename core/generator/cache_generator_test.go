@@ -2,10 +2,10 @@ package generator
 
 import (
 	"fmt"
+	"github.com/chuidaqi666/uid-generator-go/core/base"
+	"github.com/chuidaqi666/uid-generator-go/core/worker"
 	"sync"
 	"testing"
-	"uid-generator-go/core/base"
-	"uid-generator-go/core/worker"
 )
 
 func Test11(t *testing.T) {
