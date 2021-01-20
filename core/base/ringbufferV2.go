@@ -38,7 +38,7 @@ type CacheLinePad struct {
 	_ [CacheLinePadSize]byte
 }
 
-const CacheLinePadSize = 64
+const CacheLinePadSize = 32
 
 type RingBufferV2 struct {
 	bufferSize       uint64
