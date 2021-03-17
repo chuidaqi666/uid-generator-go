@@ -35,26 +35,23 @@ type PaddedflagStruct struct {
 }
 
 type CacheLinePad struct {
-	_ [CacheLinePadSize]byte
+	_ [CacheLinePadSizeV2]byte
 }
 
-const CacheLinePadSize = 32
+const CacheLinePadSizeV2 = 32
 
 type RingBufferV2 struct {
 	bufferSize       uint64
 	indexMask        int64
 	paddingThreshold int64
+	lastSecond       uint64
+	running          PaddedRunStruct
+	tail             PaddedTailStruct
+	cursor           PaddedCursorStruct
+	slots            []PaddedSlotStruct
+	flags            []PaddedflagStruct
 	mu               sync.Mutex
 	UidProvider      func(uint64) []uint64
-	lastSecond       uint64
-
-	//padding
-	running PaddedRunStruct
-	tail    PaddedTailStruct
-	cursor  PaddedCursorStruct
-
-	slots []PaddedSlotStruct
-	flags []PaddedflagStruct
 }
 
 //初始化ringbuffer

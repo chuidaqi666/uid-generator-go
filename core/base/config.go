@@ -42,11 +42,13 @@ func (u *UidglobalCfg) Init(t int, w int, s int, e string) {
 
 func (u *UidglobalCfg) InitDefault() {
 	u.TimestampBits = 29
-	u.WorkerIdBits = 22
-	u.SequenceBits = 13
+	//u.WorkerIdBits = 22
+	//u.SequenceBits = 13
+	u.WorkerIdBits = 20
+	u.SequenceBits = 15
 	u.EpochStr = "2020-08-20"
 	u.BoostPower = 3
-	u.PaddingFactor = 50
+	u.PaddingFactor = 70
 	err := configFromSystemEnv(u)
 	if err != nil {
 		panic(err)

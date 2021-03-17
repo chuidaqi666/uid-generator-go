@@ -10,24 +10,18 @@ import (
 )
 
 type RingBuffer struct {
-	tail   int64
-	cursor int64
-
-	slots []uint64
-	flags []uint32
-
-	//padding
-	running uint64
-
-	bufferSize uint64
-	indexMask  int64
-
+	tail             int64
+	cursor           int64
+	bufferSize       uint64
+	indexMask        int64
 	paddingThreshold int64
+	lastSecond       uint64
+	running          uint64
+	_                [8]byte
 	mu               sync.Mutex
-
-	UidProvider func(uint64) []uint64
-
-	lastSecond uint64
+	UidProvider      func(uint64) []uint64
+	slots            []uint64
+	flags            []uint32
 }
 
 //初始化ringbuffer

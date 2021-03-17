@@ -67,6 +67,15 @@ func (c *CacheGenerator) GetUID() (uid uint64, err error) {
 	return
 }
 
+func (c *CacheGenerator) MustGetUID() (uid uint64, err error) {
+	for true {
+		if uid, err = c.ringbuffer.Take(); err == nil {
+			return
+		}
+	}
+	return
+}
+
 // parse UID
 func (c *CacheGenerator) ParseUID(uid uint64) string {
 	sequence := (uid << (c.bita.TotalBits - c.bita.SequenceBits)) >> (c.bita.TotalBits - c.bita.SequenceBits)
