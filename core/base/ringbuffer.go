@@ -136,6 +136,5 @@ func (r *RingBuffer) AsyncPadding() {
 }
 
 func (r *RingBuffer) calSlotIndex(sequence int64) int64 {
-	//return sequence % r.indexMask
 	return sequence & r.indexMask
 }
